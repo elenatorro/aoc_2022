@@ -1,5 +1,4 @@
 def cleanup():
-    total = 0
     file = open('input', 'r')
     lines = file.readlines()
     total = len(
