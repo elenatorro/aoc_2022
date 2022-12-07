@@ -1,14 +1,14 @@
 class Node:
-    def __init__(self, uid, name, parent=None):
-        self.uid = uid
+    def __init__(self, name, parent=None):
         self.name = name
         self.parent = parent
         self.children = {}
         self.files = {}
 
-    def add_child(self, uid, name):
-        child = Node(uid, name, self)
-        self.children[name] = child
+    def add_child(self, name):
+        if name not in self.children:
+            child = Node(name, self)
+            self.children[name] = child
 
     def add_file(self, filename, filesize):
         self.files[filename] = int(filesize)
@@ -20,51 +20,55 @@ class Node:
         return total
 
     def get_size_by_child(self, total=None):
-        total = total or {}
-        total.update({
-            f'{self.uid}_{self.name}': self.get_total_size()
-        })
+        total = total or []
+        total.append(self.get_total_size())
         for child in self.children.values():
             child.get_size_by_child(total)
         return total
 
-
-def main():
-    MAX_DISK_SPACE = 70000000
-    MAX_UNUSED_DISK_SPACE = 30000000
-
-    file = open('input', 'r')
-    lines = file.readlines()
-    tree = Node(0, '/')
-    uids = 1
-
+def parse_file_into_tree(lines):
+    tree = Node('/')
     current_node = tree
-    current_dir = None
 
     for line in lines:
         line = line.strip()
-        line_parts = line.split(' ')
-        if line_parts[0] == '$':
-            if line_parts[1] == 'cd' and line_parts[2] != '/':
-                if line_parts[2] == '..':
-                    current_node = current_node.parent
-                else:
-                    if line_parts[2] not in current_node.children:
-                        current_node.add_child(uids, line_parts[2])
-                        uids += 1
-                    current_node = current_node.children[line_parts[2]]
-        elif line_parts[0] == 'dir':
-            current_dir = line_parts[1]
-            if current_dir not in current_node.children:
-                current_node.add_child(uids, current_dir)
-                uids += 1
+        if '$ ls' in line:
+            continue
+        elif '$ cd' in line:
+            dir = line.split(' ')[2]
+            if dir == '..':
+                current_node = current_node.parent
+            elif dir != '/':
+                current_node.add_child(dir)
+                current_node = current_node.children[dir]
+        elif 'dir' in line:
+            current_dir = line.split(' ')[1]
+            current_node.add_child(current_dir)
         else:
-            current_node.add_file(line_parts[1], line_parts[0])
+            filesize, filename = line.split(' ')
+            current_node.add_file(filename, filesize)
+    return tree
+
+
+def get_total_values(tree):
+    MAX_DISK_SPACE = 70000000
+    MAX_UNUSED_DISK_SPACE = 30000000
+
     total = tree.get_size_by_child()
-    unused_space = MAX_DISK_SPACE - total['0_/']
+    unused_space = MAX_DISK_SPACE - max(total)
     min_disk_space = MAX_UNUSED_DISK_SPACE - unused_space
-    total_space = sorted([v for v in total.values() if v >= min_disk_space])[0]
-    print(f'** Total: {total_space}')
+
+    return sorted([v for v in total if v >= min_disk_space])[0]
+
+
+def main():
+    file = open('input', 'r')
+    lines = file.readlines()
+
+    tree = parse_file_into_tree(lines)
+    total = get_total_values(tree)
+
+    print(f'** Total: {total}')
 
 
 if __name__ == "__main__":
