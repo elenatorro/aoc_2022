@@ -21,12 +21,9 @@ def main():
     file = open('input', 'r')
     lines = file.readlines()
     grid = build_grid(lines)
-    scores = []
+    max_scores = max(map(lambda i: max([get_score(i, j, grid) for j in range(1, len(grid) - 1)]), range(1, len(grid[0]) - 1)))
 
-    for i in range(1, len(grid) - 1):
-        for j in range(1, len(grid[0]) - 1):
-            scores.append(get_score(i, j, grid))
-    print(f'** Max score: {max(scores)}')
+    print(f'** Max score: {max_scores}')
 
 if __name__ == "__main__":
     main()

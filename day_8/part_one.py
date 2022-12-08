@@ -18,15 +18,10 @@ def main():
     file = open('input', 'r')
     lines = file.readlines()
     grid = build_grid(lines)
-    num_columns = len(grid[0])
-    num_rows = len(grid)
-    visibles = num_columns * num_rows - ((num_columns - 2) * (num_rows - 2))
-
-    for i in range(1, num_rows - 1):
-        for j in range(1, num_columns - 1):
-            if is_visible(i, j, grid):
-                visibles += 1
-    print(f'** Total: {visibles}')
+    c = len(grid[0])
+    r = len(grid)
+    total = (c * r - ((c - 2) * (r - 2))) + sum(map(lambda i: len([j for j in range(1, c - 1) if is_visible(i, j, grid)]), range(1, r - 1)))
+    print(f'** Total: {total}')
 
 if __name__ == "__main__":
     main()
